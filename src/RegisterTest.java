@@ -1,7 +1,7 @@
 /*
- * @author Léo Monteiro
- * @author Jules Emery
  * @author Antoine Bouabana
+ * @author Jules Emery
+ * @author Léo Monteiro
 */
 
 /* Classes d'équivalences
@@ -30,4 +30,28 @@
  * 
  */
 
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import stev.kwikemart.*;
+
+class RegisterTest {
+
+	@BeforeEach
+	void setUp() throws Exception {
+	}
+
+	@AfterEach
+	void tearDown() throws Exception {
+	}
+
+	@Test
+	void test() {
+		fail("Not yet implemented");
+	}
+
+
+}
