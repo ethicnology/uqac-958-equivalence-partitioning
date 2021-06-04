@@ -6,26 +6,26 @@
 
 /* Classes d'équivalences
  * 
- * valide : CUP = 12ème chiffre déterminé par les 11 précédents
- * valide : CUP = 12 chiffres
- * invalide : CUP =/= 12 chiffres
- * valide : Item(CUP, description, quantité, prix)
- * valide & intervalle : prix 0-35
- * invalide & intervalle : prix <0
- * invalide & intervalle : prix >35
- * invalide & spécifique : prix >35 => Register cesse de fonctionner
- * valide & unique : quantité fractionnaire => CUP commence par 2
- * invalide & spécifique : quantité fractionnaire AND CUP ne commence pas par 2
- * invalide & spécifique : 2 items équivalents
- * valide & unique : 2 items dont l'un à une quantité négative
- * valide & intervalle : List<Item> 1-10
- * invalide & intervalle : List<Item> <=0
- * invalide & intervalle : List<Item> >10
- * valide & unique : 5 items distincts AND total (hors taxes) >=2 => rabais 1$
- * valide & unique : Coupon = CUP commence par 5
- * valide & intervalle : Coupon >0
- * invalide & intervalle : Coupon <0
- * invalide & spécifique : total<Coupon 
+ * valid : CUP = 12ème chiffre déterminé par les 11 précédents
+ * valid : CUP = 12 chiffres
+ * invalid : CUP =/= 12 chiffres
+ * valid : Item(CUP, description, quantité, prix)
+ * valid & range : prix 0-35
+ * invalid & range : prix <0
+ * invalid & range : prix >35
+ * invalid & specific : prix >35 => Register cesse de fonctionner
+ * valid & unique : quantité fractionnaire => CUP commence par 2
+ * invalid & specific : quantité fractionnaire AND CUP ne commence pas par 2
+ * invalid & specific : 2 items équivalents
+ * valid & unique : 2 items dont l'un à une quantité négative
+ * valid & range : List<Item> 1-10
+ * invalid & range : List<Item> <=0
+ * invalid & range : List<Item> >10
+ * valid & unique : 5 items distincts AND total (hors taxes) >=2 => rabais 1$
+ * valid & unique : Coupon = CUP commence par 5
+ * valid & range : Coupon >0
+ * invalid & range : Coupon <0
+ * invalid & specific : total<Coupon 
  */
 
 
@@ -57,7 +57,7 @@ class RegisterTest {
 	}
 
     @Test
-    @DisplayName("valide : CUP = 12ème chiffre déterminé par les 11 précédents")
+    @DisplayName("valid : CUP = 12ème chiffre déterminé par les 11 précédents")
     public void vGetCheckDigit() {
     	// Generate random UPC
     	char[] UPC = new char[11];
@@ -84,23 +84,46 @@ class RegisterTest {
     }
 
     @Test
-    @DisplayName("invalide : CUP =/= 12 chiffres")
+    @DisplayName("invalid : CUP =/= 12 chiffres")
     public void iUPC() {	
-        assertAll("invalide UPC", 
+        assertAll("invalid UPC", 
             	() -> assertThrows(InvalidUpcException.UpcTooShortException.class, () -> { Upc.generateCode("123"); }),
             	() -> assertThrows(InvalidUpcException.UpcTooLongException.class, () -> { Upc.generateCode("123456789012345"); })
         );
     }
     
     @Test
-    @DisplayName("valide : Item(CUP, description, quantité, prix)")
+    @DisplayName("valid : Item(CUP, description, quantité, prix)")
     public void vItem() {
     	Item item = new Item(Upc.generateCode("12345678901"), "Bananas", 1, 1.5);
         assertAll("item", 
-        		() -> assertEquals("123456789012", item.getUpc()),
+        		() -> assertEquals("123456789012", item.getUpc()), // NOTE: Hardcoded checksum since we already verified how it's works in vGetCheckDigit
                 () -> assertEquals("Bananas", item.getDescription()),
         		() -> assertEquals(1, item.getQuantity()),
         		() -> assertEquals(1.5, item.getRetailPrice())
         		);
+    }
+
+    @Test
+    @DisplayName("valid & range : prix 0-35")
+    public void vrRetailPrice() {	
+    	int randomRangedRetailPrice = (int) (Math.random() * ( 35 - 0 ));
+    	Item item = new Item(Upc.generateCode("12345678901"), "Bananas", 1, randomRangedRetailPrice);
+        assertAll("valid retail price range", 
+            	() -> assertTrue( item.getRetailPrice() <= 35),
+            	() -> assertTrue( item.getRetailPrice() >= 0)
+        );    	  
+    }
+
+    @Test
+    @DisplayName("invalid & range : prix <0")
+    public void irRetailPriceUnderZero() {	
+    	assertThrows(AmountException.NegativeAmountException.class, () -> { new Item(Upc.generateCode("12345678901"), "Bananas", 1, -1); });
+    }
+    
+    @Test
+    @DisplayName("invalid & range : prix >35")
+    public void irRetailPriceOverThrityFive() {	
+    	assertThrows(AmountException.class, () -> { new Item(Upc.generateCode("12345678901"), "Bananas", 1, 36); });
     }
 }
