@@ -13,7 +13,6 @@
  * valid & range : prix 0-35
  * invalid & range : prix <0
  * invalid & range : prix >35
- * invalid & specific : prix >35 => Register cesse de fonctionner
  * valid & unique : quantité fractionnaire => CUP commence par 2
  * invalid & specific : quantité fractionnaire AND CUP ne commence pas par 2
  * invalid & specific : 2 items équivalents
@@ -108,22 +107,30 @@ class RegisterTest {
     @DisplayName("valid & range : prix 0-35")
     public void vrRetailPrice() {	
     	int randomRangedRetailPrice = (int) (Math.random() * ( 35 - 0 ));
-    	Item item = new Item(Upc.generateCode("12345678901"), "Bananas", 1, randomRangedRetailPrice);
-        assertAll("valid retail price range", 
-            	() -> assertTrue( item.getRetailPrice() <= 35),
-            	() -> assertTrue( item.getRetailPrice() >= 0)
-        );    	  
+    	Item item = new Item(Upc.generateCode("61519314159"), "Doritos", 1, randomRangedRetailPrice);
+        grocery.add(item);
+        assertDoesNotThrow(() -> register.print(grocery));
     }
 
     @Test
     @DisplayName("invalid & range : prix <0")
     public void irRetailPriceUnderZero() {	
-    	assertThrows(AmountException.NegativeAmountException.class, () -> { new Item(Upc.generateCode("12345678901"), "Bananas", 1, -1); });
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, -1));
+    	assertThrows(AmountException.NegativeAmountException.class, () -> { register.print(grocery); });
     }
     
     @Test
     @DisplayName("invalid & range : prix >35")
-    public void irRetailPriceOverThrityFive() {	
-    	assertThrows(AmountException.class, () -> { new Item(Upc.generateCode("12345678901"), "Bananas", 1, 36); });
+    public void irRetailPriceOverThirtyFive() {	
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 36));
+    	assertThrows(AmountException.AmountTooLargeException.class, () -> { register.print(grocery); });
+    }	
+
+    @Test
+    @DisplayName("valid & unique : quantité fractionnaire => CUP commence par 2")
+    public void vuFractionalQuantityItemsStartWith2() {	
+		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
+		assertDoesNotThrow(() -> register.print(grocery));
     }
+
 }
