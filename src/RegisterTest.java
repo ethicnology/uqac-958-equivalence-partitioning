@@ -8,7 +8,9 @@
  * 
  * valid : CUP = 12ème chiffre déterminé par les 11 précédents
  * valid : CUP = 12 chiffres
- * invalid : CUP =/= 12 chiffres
+ * invalid : CUP < 12 chiffres
+ * invalid : CUP > 12 chiffres
+ * invalid : CUP == 0 chiffres
  * valid : Item(CUP, description, quantité, prix)
  * valid & range : prix 0-35
  * invalid & range : prix <0
@@ -17,9 +19,10 @@
  * invalid & specific : quantité fractionnaire AND CUP ne commence pas par 2
  * invalid & specific : 2 items équivalents
  * valid & unique : 2 items dont l'un à une quantité négative
- * valid & range : List<Item> 1-10
- * invalid & range : List<Item> <=0
- * invalid & range : List<Item> >10
+ * invalid & unique : items quantité négative seul
+ * valid & range : grocery list range 1-10
+ * invalid & range : grocery list <=0
+ * invalid & range : grocery list >10
  * valid & unique : 5 items distincts AND total (hors taxes) >=2 => rabais 1$
  * valid & unique : Coupon = CUP commence par 5
  * valid & range : Coupon >0
@@ -83,12 +86,24 @@ class RegisterTest {
     }
 
     @Test
-    @DisplayName("invalid : CUP =/= 12 chiffres")
-    public void iUPC() {	
-        assertAll("invalid UPC", 
-            	() -> assertThrows(InvalidUpcException.UpcTooShortException.class, () -> { Upc.generateCode("123"); }),
-            	() -> assertThrows(InvalidUpcException.UpcTooLongException.class, () -> { Upc.generateCode("123456789012345"); })
-        );
+    @DisplayName("invalid : CUP < 12 chiffres")
+    public void iUpcTooShort() {
+    	grocery.add(new Item("228850", "Beef", 0.5, 5.75));
+    	assertThrows(InvalidUpcException.UpcTooShortException.class, () -> { register.print(grocery); });
+    }
+    
+    @Test
+    @DisplayName("invalid : CUP > 12 chiffres")
+    public void iUpcTooLong() {
+    	grocery.add(new Item("7960301149779", "Something", 1, 5));
+    	assertThrows(InvalidUpcException.UpcTooLongException.class, () -> { register.print(grocery); });
+    }
+    
+    @Test
+    @DisplayName("invalid : CUP == 0 chiffres")
+    public void iNoUpc() {
+    	grocery.add(new Item("", "Something", 1, 5));
+    	assertThrows(InvalidUpcException.NoUpcException.class, () -> { register.print(grocery); });
     }
     
     @Test
@@ -132,5 +147,88 @@ class RegisterTest {
 		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
 		assertDoesNotThrow(() -> register.print(grocery));
     }
+    
+    @Test
+    @DisplayName("invalid & specific : quantité fractionnaire & CUP ne commence pas par 2")
+    public void isInvalidQuantityForCategory() {	
+    	int randomFirstDigit = 2;
+    	while(randomFirstDigit == 2) { // Random first digit except 2
+    		randomFirstDigit = (int) (Math.random() * ( 9 - 0 ));
+    	}
+		grocery.add(new Item(Upc.generateCode(randomFirstDigit+"2804918500"), "Doritos", 0.5, 3));
+    	assertThrows(InvalidQuantityException.InvalidQuantityForCategoryException.class, () -> { register.print(grocery); });
+    }
 
+    @Test
+    @DisplayName("invalid & specific : 2 items équivalents")
+    public void isDuplicateItem() {	
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 3));
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 3));
+    	assertThrows(Register.DuplicateItemException.class, () -> { register.print(grocery); });
+    }
+    
+    @Test
+    @DisplayName("valid & unique : 2 items dont l'un à une quantité négative")
+    public void vuDuplicateItemButOneIsNegative() {	
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 3)); // Add one
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", -1, 3)); // Remove one
+		assertDoesNotThrow(() -> register.print(grocery));
+    }
+    
+    @Test
+    @DisplayName("invalid & unique : items quantité négative seul")
+    public void iuNoSuchItem() {	
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", -1, 3));
+    	assertThrows(Register.NoSuchItemException.class, () -> { register.print(grocery); });
+    }
+    
+    @Test
+    @DisplayName("valid & range : grocery list range 1-10")
+    public void vuGroceryListRange1To10() {	
+		grocery.add(new Item(Upc.generateCode("12345678901"), "Bananas", 1, 1.5)); 
+		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
+		grocery.add(new Item(Upc.generateCode("12345678901"), "Bananas", -1, 1.5)); //Remove bananas
+		grocery.add(new Item(Upc.generateCode("64748119599"), "Chewing gum", 2, 0.99));
+		grocery.add(new Item(Upc.generateCode("44348225996"), "Gobstoppers", 1, 0.99));
+		grocery.add(new Item(Upc.generateCode("34323432343"), "Nerds", 2, 1.44));
+		grocery.add(new Item(Upc.generateCode("54323432343"), "Doritos Club", 1, 0.5));
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 1.25));
+		assertDoesNotThrow(() -> register.print(grocery));
+    }
+    
+    @Test
+    @DisplayName("invalid & range : grocery list <=0")
+    public void irEmptyGroceryList() {	
+    	assertThrows(RegisterException.EmptyGroceryListException.class, () -> { register.print(grocery); });
+    }
+    
+    @Test
+    @DisplayName("invalid & range : grocery list >10")
+    public void irTooManyItems() {	
+		grocery.add(new Item(Upc.generateCode("12345678901"), "Bananas", 1, 1.5)); 
+		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
+		grocery.add(new Item(Upc.generateCode("12345678901"), "Bananas", -1, 1.5)); //Remove bananas
+		grocery.add(new Item(Upc.generateCode("64748119599"), "Chewing gum", 2, 0.99));
+		grocery.add(new Item(Upc.generateCode("44348225996"), "Gobstoppers", 1, 0.99));
+		grocery.add(new Item(Upc.generateCode("34323432343"), "Nerds", 2, 1.44));
+		grocery.add(new Item(Upc.generateCode("54323432343"), "Doritos Club", 1, 0.5));
+		grocery.add(new Item(Upc.generateCode("54323432343"), "Doritos Club", -1, 0.5)); // Remove Doritos Club
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 1.25));
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", -1, 1.25)); // Remove Doritos
+		grocery.add(new Item(Upc.generateCode("34323432343"), "Nerds", -1, 1.44)); // Remove 1 Nerds
+    	assertThrows(RegisterException.TooManyItemsException.class, () -> { register.print(grocery); });
+    }
+    		
+    @Test // TODO : How to check the TOTAL for the rebate if there are no methods?
+    @DisplayName("valid & unique : 5 items distincts AND total (hors taxes) >=2 => rabais 1$")
+    public void vu() {	
+		grocery.add(new Item(Upc.generateCode("12345678901"), "Bananas", 1, 1.5)); 
+		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
+		grocery.add(new Item(Upc.generateCode("12345678901"), "Bananas", -1, 1.5)); //Remove bananas
+		grocery.add(new Item(Upc.generateCode("64748119599"), "Chewing gum", 2, 0.99));
+		grocery.add(new Item(Upc.generateCode("44348225996"), "Gobstoppers", 1, 0.99));
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 1.25));
+		System.out.println(register.print(grocery));
+		assertDoesNotThrow(() -> register.print(grocery));
+    }
 }
