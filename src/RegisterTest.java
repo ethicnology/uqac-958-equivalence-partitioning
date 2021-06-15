@@ -49,7 +49,16 @@ class RegisterTest {
 	
 	@BeforeEach
 	void setUp() throws Exception {
-		register.changePaper(PaperRoll.SMALL_ROLL);
+		switch(PaperRoll.LARGE_ROLL.getLinesLeft()) {
+		case 1000:
+			register.changePaper(PaperRoll.LARGE_ROLL);
+			break;
+		case 0:
+			register.changePaper(PaperRoll.SMALL_ROLL);
+			break;
+		default:
+			System.out.println(PaperRoll.LARGE_ROLL.getLinesLeft());
+		}
 		grocery = new ArrayList<Item>();
 	}
 
