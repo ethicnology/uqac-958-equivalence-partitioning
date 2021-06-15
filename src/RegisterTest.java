@@ -26,8 +26,8 @@
  * invalid & range : grocery list >10
  * valid & unique : 5 items distincts AND total (hors taxes) >=2 => rabais 1$
  * valid & unique : Coupon = CUP commence par 5
- * valid & range : Coupon >0
- * invalid & range : Coupon <0
+ * valid & range : Coupon >0 // Useless ? Coupon est un item
+ * invalid & range : Coupon <0 // Useless ? Coupon est un item
  * invalid & specific : total<Coupon 
  */
 
@@ -251,6 +251,14 @@ class RegisterTest {
 		grocery.add(new Item(Upc.generateCode("34323432343"), "Nerds", -1, 1.44)); // Remove 1 Nerds
     	assertThrows(RegisterException.TooManyItemsException.class, () -> { register.print(grocery); });
     }
+    
+    @Test
+    @DisplayName("valid & unique : Coupon = CUP commence par 5")
+    public void vuCoupon() {	
+		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 1.25));
+		grocery.add(new Item("543234323434", "Doritos Club", 1, 0.5)); // Coupon
+		assertDoesNotThrow(() -> register.print(grocery));
+    }
     		
     @Test // TODO : How to check the TOTAL for the rebate if there are no methods?
     @DisplayName("valid & unique : 5 items distincts AND total (hors taxes) >=2 => rabais 1$")
@@ -261,7 +269,6 @@ class RegisterTest {
 		grocery.add(new Item(Upc.generateCode("64748119599"), "Chewing gum", 2, 0.99));
 		grocery.add(new Item(Upc.generateCode("44348225996"), "Gobstoppers", 1, 0.99));
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 1.25));
-		assertDoesNotThrow(() -> register.print(grocery));
-		System.out.println(PaperRoll.LARGE_ROLL.tearUp());
+		assertDoesNotThrow(() -> System.out.println(register.print(grocery)));
     }
 }
