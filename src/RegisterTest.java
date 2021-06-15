@@ -5,8 +5,9 @@
 */
 
 /* Classes d'équivalences
- * 
+ * invalid : Register s'arrête si il n'y à plus de papier
  * valid : CUP = 12ème chiffre déterminé par les 11 précédents
+ * invalid : mauvais check digit
  * valid : CUP = 12 chiffres
  * invalid : CUP < 12 chiffres
  * invalid : CUP > 12 chiffres
@@ -32,16 +33,20 @@
 
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.MethodOrderer;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import stev.kwikemart.*;
 
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class RegisterTest {
 	
 	Register register = Register.getRegister();
@@ -49,15 +54,9 @@ class RegisterTest {
 	
 	@BeforeEach
 	void setUp() throws Exception {
-		switch(PaperRoll.LARGE_ROLL.getLinesLeft()) {
-		case 1000:
+		register.changePaper(PaperRoll.SMALL_ROLL);
+		if(PaperRoll.SMALL_ROLL.getLinesLeft() == 0) {
 			register.changePaper(PaperRoll.LARGE_ROLL);
-			break;
-		case 0:
-			register.changePaper(PaperRoll.SMALL_ROLL);
-			break;
-		default:
-			System.out.println(PaperRoll.LARGE_ROLL.getLinesLeft());
 		}
 		grocery = new ArrayList<Item>();
 	}
@@ -66,6 +65,23 @@ class RegisterTest {
 	void tearDown() throws Exception {
 		grocery.clear();
 	}
+	
+    @Test
+    @Order(1)
+    @DisplayName("invalid : register s'arrête si il n'y à plus de papier")
+    public void iOutOfPaper() {
+    	System.out.println("prems");
+		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
+		register.print(grocery);
+		grocery.clear();
+
+		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
+		register.print(grocery);
+		grocery.clear();
+		
+		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
+    	assertThrows(PaperRollException.OutOfPaperException.class, () -> { register.print(grocery); });
+    }
 
     @Test
     @DisplayName("valid : CUP = 12ème chiffre déterminé par les 11 précédents")
@@ -91,7 +107,15 @@ class RegisterTest {
     	}
     	int substract = checksum + (10 - checksum % 10);
     	checksum = Math.abs(checksum - substract);
+    	checksum = checksum % 10;
     	assertEquals(checksum, Upc.getCheckDigit(String.valueOf(UPC)));
+    }
+
+	@Test 
+    @DisplayName("invalid : mauvais check digit")
+    public void iInvalidCheckDigit() {
+    	grocery.add(new Item("123456789015", "Something", 1, 5));
+    	assertThrows(InvalidUpcException.InvalidCheckDigitException.class, () -> { register.print(grocery); });
     }
 
     @Test
@@ -108,7 +132,7 @@ class RegisterTest {
     	assertThrows(InvalidUpcException.UpcTooLongException.class, () -> { register.print(grocery); });
     }
     
-    @Test
+    @Test 
     @DisplayName("invalid : CUP == 0 chiffres")
     public void iNoUpc() {
     	grocery.add(new Item("", "Something", 1, 5));
@@ -138,14 +162,14 @@ class RegisterTest {
 
     @Test
     @DisplayName("invalid & range : prix <0")
-    public void irRetailPriceUnderZero() {	
+    public void irNegativeAmount() {	
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, -1));
     	assertThrows(AmountException.NegativeAmountException.class, () -> { register.print(grocery); });
     }
     
     @Test
     @DisplayName("invalid & range : prix >35")
-    public void irRetailPriceOverThirtyFive() {	
+    public void irAmountTooLarge() {	
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 36));
     	assertThrows(AmountException.AmountTooLargeException.class, () -> { register.print(grocery); });
     }	
@@ -237,7 +261,7 @@ class RegisterTest {
 		grocery.add(new Item(Upc.generateCode("64748119599"), "Chewing gum", 2, 0.99));
 		grocery.add(new Item(Upc.generateCode("44348225996"), "Gobstoppers", 1, 0.99));
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 1.25));
-		System.out.println(register.print(grocery));
 		assertDoesNotThrow(() -> register.print(grocery));
+		System.out.println(PaperRoll.LARGE_ROLL.tearUp());
     }
 }
