@@ -1,7 +1,7 @@
 /*
- * @author Antoine Bouabana
- * @author Jules Emery
- * @author Léo Monteiro
+ * @author Antoine Bouabana (BOUA25119908)
+ * @author Jules Emery (EMEJ05119405)
+ * @author Léo Monteiro (MONL29079907)
 */
 
 /* Classes d'équivalences
