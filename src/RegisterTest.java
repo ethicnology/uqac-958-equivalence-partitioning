@@ -5,29 +5,27 @@
 */
 
 /* Classes d'équivalences
- * invalid : Register s'arrête si il n'y à plus de papier
- * valid : CUP = 12ème chiffre déterminé par les 11 précédents
+ * invalid : Register s'arrete si il n'y a plus de papier
+ * valid : CUP = 12eme chiffre determine par les 11 précédents
  * invalid : mauvais check digit
  * valid : CUP = 12 chiffres
  * invalid : CUP < 12 chiffres
  * invalid : CUP > 12 chiffres
  * invalid : CUP == 0 chiffres
- * valid : Item(CUP, description, quantité, prix)
+ * valid : Item(CUP, description, quantite, prix)
  * valid & range : prix 0-35
  * invalid & range : prix <0
  * invalid & range : prix >35
- * valid & unique : quantité fractionnaire => CUP commence par 2
- * invalid & specific : quantité fractionnaire AND CUP ne commence pas par 2
- * invalid & specific : 2 items équivalents
- * valid & unique : 2 items dont l'un à une quantité négative
- * invalid & unique : items quantité négative seul
+ * valid & unique : quantite fractionnaire => CUP commence par 2
+ * invalid & specific : quantite fractionnaire AND CUP ne commence pas par 2
+ * invalid & specific : 2 items equivalents
+ * valid & unique : 2 items dont l'un a une quantite negative
+ * invalid & unique : items quantite negative seul
  * valid & range : grocery list range 1-10
  * invalid & range : grocery list <=0
  * invalid & range : grocery list >10
  * valid & unique : 5 items distincts AND total (hors taxes) >=2 => rabais 1$
  * valid & unique : Coupon = CUP commence par 5
- * valid & range : Coupon >0 // Useless ? Coupon est un item
- * invalid & range : Coupon <0 // Useless ? Coupon est un item
  * invalid & specific : total<Coupon 
  */
 
@@ -68,7 +66,7 @@ class RegisterTest {
 	
     @Test
     @Order(1)
-    @DisplayName("invalid : register s'arrête si il n'y à plus de papier")
+    @DisplayName("invalid : register s'arrete si il n'y a plus de papier")
     public void iOutOfPaper() {
     	System.out.println("prems");
 		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
@@ -84,7 +82,7 @@ class RegisterTest {
     }
 
     @Test
-    @DisplayName("valid : CUP = 12ème chiffre déterminé par les 11 précédents")
+    @DisplayName("valid : CUP = 12eme chiffre determine par les 11 precedents")
     public void vGetCheckDigit() {
     	// Generate random UPC
     	char[] UPC = new char[11];
@@ -140,7 +138,7 @@ class RegisterTest {
     }
     
     @Test
-    @DisplayName("valid : Item(CUP, description, quantité, prix)")
+    @DisplayName("valid : Item(CUP, description, quantite, prix)")
     public void vItem() {
     	Item item = new Item(Upc.generateCode("12345678901"), "Bananas", 1, 1.5);
         assertAll("item", 
@@ -175,14 +173,14 @@ class RegisterTest {
     }	
 
     @Test
-    @DisplayName("valid & unique : quantité fractionnaire => CUP commence par 2")
+    @DisplayName("valid & unique : quantite fractionnaire => CUP commence par 2")
     public void vuFractionalQuantityItemsStartWith2() {	
 		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 5.75));
 		assertDoesNotThrow(() -> register.print(grocery));
     }
     
     @Test
-    @DisplayName("invalid & specific : quantité fractionnaire & CUP ne commence pas par 2")
+    @DisplayName("invalid & specific : quantite fractionnaire & CUP ne commence pas par 2")
     public void isInvalidQuantityForCategory() {	
     	int randomFirstDigit = 2;
     	while(randomFirstDigit == 2) { // Random first digit except 2
@@ -193,7 +191,7 @@ class RegisterTest {
     }
 
     @Test
-    @DisplayName("invalid & specific : 2 items équivalents")
+    @DisplayName("invalid & specific : 2 items equivalents")
     public void isDuplicateItem() {	
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 3));
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 3));
@@ -201,7 +199,7 @@ class RegisterTest {
     }
     
     @Test
-    @DisplayName("valid & unique : 2 items dont l'un à une quantité négative")
+    @DisplayName("valid & unique : 2 items dont l'un a une quantite negative")
     public void vuDuplicateItemButOneIsNegative() {	
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", 1, 3)); // Add one
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", -1, 3)); // Remove one
@@ -209,7 +207,7 @@ class RegisterTest {
     }
     
     @Test
-    @DisplayName("invalid & unique : items quantité négative seul")
+    @DisplayName("invalid & unique : items quantite negative seul")
     public void iuNoSuchItem() {	
 		grocery.add(new Item(Upc.generateCode("61519314159"), "Doritos", -1, 3));
     	assertThrows(Register.NoSuchItemException.class, () -> { register.print(grocery); });
