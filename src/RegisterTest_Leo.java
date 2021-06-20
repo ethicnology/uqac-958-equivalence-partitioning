@@ -32,6 +32,7 @@
  * 											| 	1.13: Quantity coupon for same CUP > 1 
  * 											|	i.14: Quantity item = 0
  * 											|	i.19: length of CUP = 0
+ * 											|	i.20: Withdrawal Quantity > to item Quantity
  * 
  * =======================          	Unit Price                 ==================== 
  * v.7 : Price between [0, 35] (Range)		|	i.15: Price > 35
@@ -71,6 +72,7 @@ class RegisterTest_Leo {
 		register.changePaper(PaperRoll.LARGE_ROLL);
 		grocery = new ArrayList<Item>();
 	}
+	
 
 	@AfterEach
 	void tearDown() throws Exception {
@@ -245,6 +247,19 @@ class RegisterTest_Leo {
 		grocery.add(new Item(Upc.generateCode("22804918500"), "Beef", 0.5, 3));
 		grocery.add(new Item(Upc.generateCode("11111111111"), "WrongWithdrawal", -1, 1));
 		assertThrows(Register.NoSuchItemException.class, () -> { register.print(grocery); });
+    }
+    
+    /**
+	 * withdrawalTooBigScenario() represent the scenario where we withdrawal more quantity we registered
+	 * It represents the situation : 
+	 * v.1 and v.2 and i.20 and v.7 and v.9
+	 */
+    @Test
+    @DisplayName("v.1 and v.2 and i.20 and v.7 and v.9 -> Withdrawal without registering first (NoSuchItemException expected)")
+    public void withdrawalTooBigScenario() {
+		grocery.add(new Item(Upc.generateCode("12345679812"), "Bananas", 1, 3));
+		grocery.add(new Item(Upc.generateCode("12345679812"), "Withdrawal too big", -2, 1));
+		assertThrows(InvalidQuantityException.class, () -> { register.print(grocery); });
     }
     
     /**
