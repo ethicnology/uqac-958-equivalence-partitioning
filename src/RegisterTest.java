@@ -1,11 +1,4 @@
 /*
- * EXPAND ME
- * @author Antoine Bouabana (BOUA25119908)
- * @author Jules Emery (EMEJ05119405)
- * @author Leo Monteiro (MONL29079907)
-*/
-
-/*
  * Project configuration :
  * 
  * 		- JUnit Version 5.7.1
