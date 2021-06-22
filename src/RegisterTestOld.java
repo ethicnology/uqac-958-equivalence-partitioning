@@ -1,9 +1,3 @@
-/*
- * @author Antoine Bouabana (BOUA25119908)
- * @author Jules Emery (EMEJ05119405)
- * @author Léo Monteiro (MONL29079907)
-*/
-
 /* Classes d'équivalences
  * invalid : Register s'arrete si il n'y a plus de papier
  * valid : CUP = 12eme chiffre determine par les 11 précédents
